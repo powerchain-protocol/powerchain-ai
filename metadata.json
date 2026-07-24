@@ -1,0 +1,6 @@
+{
+  "name": "PowerChain AI",
+  "description": "Enterprise AI Chat Dashboard and Renewable Energy Analytics Assistant",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

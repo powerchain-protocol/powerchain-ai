@@ -3,9 +3,10 @@ import React from 'react';
 interface AvatarProps {
   name: string;
   role?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'dark-green' | 'onyx' | 'emerald';
   className?: string;
+  imageUrl?: string | null;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({
@@ -13,6 +14,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   size = 'md',
   variant = 'dark-green',
   className = '',
+  imageUrl
 }) => {
   const initials = name
     ? name
@@ -27,6 +29,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     sm: 'w-7 h-7 text-[10px]',
     md: 'w-8 h-8 text-xs',
     lg: 'w-10 h-10 text-sm',
+    xl: 'w-16 h-16 text-xl',
   };
 
   const variantClasses = {
@@ -37,6 +40,14 @@ export const Avatar: React.FC<AvatarProps> = ({
     emerald:
       'bg-emerald-600 text-white border border-emerald-500 shadow-2xs',
   };
+
+  if (imageUrl) {
+    return (
+      <div className={`rounded-full shrink-0 overflow-hidden ${sizeClasses[size]} ${className}`}>
+        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
 
   return (
     <div

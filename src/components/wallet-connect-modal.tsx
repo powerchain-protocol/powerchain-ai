@@ -16,10 +16,40 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
   if (!isOpen) return null;
 
   const walletOptions = [
-    { name: 'Metamask', description: 'Browser extension & Mobile App', iconColor: 'bg-amber-500/10 text-amber-600' },
-    { name: 'Coinbase Wallet', description: 'Self-custody crypto wallet', iconColor: 'bg-blue-500/10 text-blue-600' },
-    { name: 'WalletConnect', description: 'Scan with WalletConnect protocol', iconColor: 'bg-sky-500/10 text-sky-600' },
-    { name: 'PowerChain Vault MPC', description: 'Multi-party computation key recovery', iconColor: 'bg-emerald-950/40 text-emerald-400' },
+    { 
+      name: 'Phantom (Solana)', 
+      description: 'The most popular Solana wallet', 
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-[#AB9FF2]">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm4-6h-6v2h6V11zm-4-4h2v2h-2V7z"/>
+        </svg>
+      )
+    },
+    { 
+      name: 'Solflare (Solana)', 
+      description: 'Web & Extension wallet', 
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-[#F39C12]">
+          <path d="M12 2L2 12h5l-2 10 10-10h-5l2-10z"/>
+        </svg>
+      )
+    },
+    { 
+      name: 'Metamask', 
+      description: 'EVM compatible wallet', 
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-[#F6851B]">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6L8 14h8z"/>
+        </svg>
+      )
+    },
+    { 
+      name: 'PowerChain Vault MPC', 
+      description: 'Multi-party computation key recovery', 
+      iconColor: 'bg-emerald-950/40 text-emerald-400',
+      icon: <ShieldCheck className="w-5 h-5" />
+    },
   ];
 
   return (
@@ -87,8 +117,8 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
                   className="w-full p-3.5 bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-800 border border-gray-200 dark:border-zinc-700/80 rounded-xl flex items-center justify-between transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${opt.iconColor}`}>
-                      <Wallet className="w-4 h-4" />
+                    <div className={`p-2 rounded-lg flex items-center justify-center ${opt.iconColor || 'bg-gray-100 dark:bg-zinc-800'}`}>
+                      {opt.icon}
                     </div>
                     <div className="text-left">
                       <p className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">

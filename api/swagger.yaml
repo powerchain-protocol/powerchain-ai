@@ -1,0 +1,18 @@
+openapi: 3.0.0
+info:
+  title: PowerChain API
+  version: 1.0.0
+  description: API for PowerChain Grid Intelligence and Sovereign AI Infrastructure
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /api/chat:
+    post:
+      summary: Send chat message to AI inference node
+      responses:
+        '200':
+          description: AI Response

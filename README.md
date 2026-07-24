@@ -2,7 +2,7 @@
 
 > **Tokenized Grid Intelligence & Sovereign AI Infrastructure for Energy Networks**
 
-PowerChain AI OS is an enterprise-grade, tokenized operations intelligence platform designed for smart grid operators, renewable energy assets, carbon offset registries, and battery energy storage systems (BESS).
+PowerChain AI OS is an enterprise-grade, tokenized operations artifaction intelligence platform designed for smart grid operators, renewable energy assets, carbon offset registries, and battery energy storage systems (BESS).
 
 ---
 
@@ -26,11 +26,14 @@ PowerChain AI OS is an enterprise-grade, tokenized operations intelligence platf
 - **Jupiter & Raydium (`/ai/solana/jupiter.tsx`, `raydium.tsx`)**: Automated liquidity swaps for tokenized energy assets.
 - **Sui Cetus Protocol (`/sui/cetus.tsx`)**: Sui Network CLMM carbon credit pools.
 
-### 4. MPC Embedded Wallet Framework
+### 4. WebSocket & Real-Time Sync
+- **Live Updates**: Telemetry models and charts auto-sync over high-frequency websockets.
+
+### 5. MPC Embedded Wallet Framework
 - **Seedless Security**: 2-of-3 threshold signature scheme.
 - **Instant Transfers**: Transfer PWRC tokens across PowerChain L2, Solana, and Sui.
 
-### 5. Enterprise Command Palette (`Cmd + K`)
+### 6. Enterprise Command Palette (`Cmd + K`)
 - Keyboard-accessible global modal to trigger workflows, switch specialist agents, run forecasts, and toggle compact sidebar modes.
 
 ---
@@ -51,5 +54,5 @@ npm run build
 ---
 
 ## 🔒 Security & Privacy
-
 All API keys supplied via BYOAI mode are encrypted in local storage memory and proxied via server-side endpoints to keep credentials completely private.
+

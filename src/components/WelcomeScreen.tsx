@@ -23,8 +23,15 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       </div>
 
       {/* Greeting Header */}
-      <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white text-center tracking-tight">
-        {greeting}, {userName.split(' ')[0]}.
+      <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white text-center tracking-tight flex items-center justify-center gap-3">
+        <span>{greeting}, {userName.split(' ')[0]}.</span>
+        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/40 rounded-full text-emerald-800 dark:text-emerald-400 text-xs font-bold tracking-widest uppercase">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6L8 14h8z"/>
+          </svg>
+          PWRC AI
+        </span>
       </h2>
 
       <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mt-2 flex items-center gap-1.5">

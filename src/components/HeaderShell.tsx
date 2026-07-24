@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Menu,
+  PanelRight,
   ChevronDown,
   Shield,
   ShieldCheck,
@@ -10,6 +11,11 @@ import {
   User,
   Check,
   Settings,
+  Brain,
+  Sparkles,
+  Zap,
+  Cpu,
+  Link as LinkIcon
 } from 'lucide-react';
 import { UserProfile, ChatSettings } from '../types';
 import { WalletButton } from './wallet-button';
@@ -21,6 +27,7 @@ interface HeaderShellProps {
   settings: ChatSettings;
   onUpdateSettings: (updated: Partial<ChatSettings>) => void;
   onToggleMobileSidebar: () => void;
+  onToggleRightSidebar?: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   onOpenSettings: (tab?: string) => void;
@@ -33,6 +40,7 @@ export const HeaderShell: React.FC<HeaderShellProps> = ({
   settings,
   onUpdateSettings,
   onToggleMobileSidebar,
+  onToggleRightSidebar,
   isDarkMode,
   onToggleDarkMode,
   onOpenSettings,
@@ -44,10 +52,10 @@ export const HeaderShell: React.FC<HeaderShellProps> = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const availableModels = [
-    { name: 'PowerChain GPT-4o', badge: 'Default', desc: 'High intelligence multi-modal model' },
-    { name: 'Gemini 3.5 Flash', badge: 'Fast', desc: 'Google low-latency intelligence' },
-    { name: 'Gemini 3.1 Pro', badge: 'High Thinking', desc: 'Complex reasoning & code synthesis' },
-    { name: 'PowerChain Domain-v2', badge: 'Specialized', desc: 'Trained on grid & renewable datasets' },
+    { name: 'PowerChain GPT-4o', badge: 'Default', desc: 'High intelligence multi-modal model', icon: Brain },
+    { name: 'Gemini 3.5 Flash', badge: 'Fast', desc: 'Google low-latency intelligence', icon: Zap },
+    { name: 'Gemini 3.1 Pro', badge: 'High Thinking', desc: 'Complex reasoning & code synthesis', icon: Sparkles },
+    { name: 'PowerChain Domain-v2', badge: 'Specialized', desc: 'Trained on grid & renewable datasets', icon: Cpu },
   ];
 
   const notifications = [
@@ -104,14 +112,21 @@ export const HeaderShell: React.FC<HeaderShellProps> = ({
                         : 'hover:bg-gray-50 dark:hover:bg-zinc-700/60 text-gray-700 dark:text-zinc-300'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-xs">{m.name}</span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-zinc-200 font-mono">
-                          {m.badge}
-                        </span>
+                    <div className="flex items-start gap-2.5">
+                      <div className={`mt-0.5 w-6 h-6 rounded flex items-center justify-center shrink-0 ${
+                        settings.model === m.name ? 'bg-white dark:bg-zinc-800 shadow-xs text-emerald-600 dark:text-emerald-400' : 'bg-gray-200 dark:bg-zinc-800/50 text-gray-500'
+                      }`}>
+                        <m.icon className="w-3.5 h-3.5" />
                       </div>
-                      <p className="text-[10px] text-gray-400 dark:text-zinc-400 mt-0.5">{m.desc}</p>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-xs">{m.name}</span>
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-zinc-200 font-mono">
+                            {m.badge}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 dark:text-zinc-400 mt-0.5">{m.desc}</p>
+                      </div>
                     </div>
                     {settings.model === m.name && <Check className="w-4 h-4 text-black dark:text-white shrink-0 mt-0.5" />}
                   </button>
@@ -140,8 +155,6 @@ export const HeaderShell: React.FC<HeaderShellProps> = ({
 
       {/* Right controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Wallet Connect Button */}
-        <WalletButton size="sm" />
         {/* MPC Security Badge */}
         <button
           id="header-mpc-secure-btn"
@@ -160,6 +173,14 @@ export const HeaderShell: React.FC<HeaderShellProps> = ({
           title="Toggle Theme"
         >
           {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
+        </button>
+
+        <button
+          onClick={onToggleRightSidebar}
+          className="xl:hidden p-2 rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+          title="Toggle Insights & Telemetry"
+        >
+          <PanelRight className="w-4 h-4" />
         </button>
 
         {/* Notifications */}
@@ -199,13 +220,17 @@ export const HeaderShell: React.FC<HeaderShellProps> = ({
           )}
         </div>
 
+        {/* Wallet Connect Button */}
+        <WalletButton size="md" />
+
         {/* Share Button (matching clean minimalism header button) */}
         <button
           id="header-share-btn"
-          onClick={() => alert('Sharing workspace link copied to clipboard.')}
-          className="text-xs font-semibold bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-xs"
+          onClick={() => alert('Solana Action Blink Generated:\n\ndial.to/?action=solana-action:https://powerchain.network/api/actions/share-workspace\n\nLink copied to clipboard!')}
+          className="text-xs font-semibold bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-2xs flex items-center gap-1.5"
         >
-          Share
+          <LinkIcon className="w-3.5 h-3.5" />
+          <span>Share Blink</span>
         </button>
 
         {/* User Profile */}

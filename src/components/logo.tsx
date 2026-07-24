@@ -17,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({
     size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-base';
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
+    <div className={`flex items-center gap-2.5 shrink-0 ${className}`}>
       <div
         className={`${iconSizeClass} rounded-xl bg-gradient-to-br from-zinc-900 via-slate-900 to-zinc-950 text-emerald-400 flex items-center justify-center shrink-0 shadow-md border border-slate-700/80 transition-transform hover:scale-105 p-1`}
       >

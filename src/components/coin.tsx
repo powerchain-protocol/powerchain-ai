@@ -37,6 +37,7 @@ export const Coin: React.FC<CoinProps> = ({
             {/* Top Loop P with sharp lightning cut */}
             <path d="M 25 15 L 65 15 C 80 15, 85 28, 80 42 C 75 54, 60 58, 48 58 L 40 58 L 28 85 L 20 85 L 32 58 L 25 58 Z M 38 28 L 38 45 L 55 45 C 65 45, 68 36, 65 28 Z" />
             <path d="M 42 55 L 30 85 L 50 50 L 38 50 Z" className="text-emerald-400 fill-current" />
+            <text x="50" y="80" fontSize="16" fontWeight="bold" textAnchor="middle" fill="#34d399" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>AI</text>
           </svg>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { AppSidebar } from './components/app-sidebar';
 import { HeaderShell } from './components/HeaderShell';
 import { ChatInterface } from './components/ChatInterface';
 import { RightWidgets } from './components/RightWidgets';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { SettingsModal } from './components/SettingsModal';
 import { ExploreAgentsModal } from './components/ExploreAgentsModal';
 import { PromptLibraryModal } from './components/PromptLibraryModal';
@@ -53,6 +54,7 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
 
@@ -249,6 +251,10 @@ export default function App() {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `API Error: ${response.status} ${response.statusText}`);
+      }
+
       const aiMsgId = `msg-ai-${Date.now()}`;
       const aiMessage: ChatMessage = {
         id: aiMsgId,
@@ -282,15 +288,21 @@ export default function App() {
         sessionId: activeSessionId,
         message: aiMessage,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching AI chat response:', err);
+      
+      const errorMessage = err.message?.includes('API Error') || err.message?.includes('model') 
+        ? err.message 
+        : 'Network error connecting to the AI inference node. Please check your connection or try a different model.';
+
       // Fallback message
       const fallbackMsg: ChatMessage = {
         id: `msg-ai-fallback-${Date.now()}`,
         sender: 'assistant',
-        text: `Analysis complete for: "${text}". Solar array telemetry verified across 3 regional nodes. All inverters running at 98.4% nominal capacity.`,
+        text: `⚠️ **Intelligence Node Error**\n\n${errorMessage}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        actions: ['Breakdown by location', 'Export report'],
+        actions: ['Check network', 'Retry connection'],
+        agentId: activeAgentId,
       };
 
       setSessions((prev) =>
@@ -346,6 +358,7 @@ export default function App() {
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            onToggleRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
             isDarkMode={isDarkMode}
             onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
             onOpenSettings={handleOpenSettingsTab}
@@ -356,16 +369,18 @@ export default function App() {
           {/* Workspace Layout */}
           <div className="flex-1 flex min-h-0 overflow-hidden">
             {/* Main Chat Interface Workspace */}
-            <ChatInterface
-              session={activeSession}
-              settings={settings}
-              onUpdateSettings={handleUpdateSettings}
-              onSendMessage={handleSendMessage}
-              activeAgent={activeAgent}
-              isLoading={isLoading}
-              onOpenPromptLibrary={() => setIsPromptLibraryModalOpen(true)}
-              currentUser={user}
-            />
+            <ErrorBoundary>
+              <ChatInterface
+                session={activeSession}
+                settings={settings}
+                onUpdateSettings={handleUpdateSettings}
+                onSendMessage={handleSendMessage}
+                activeAgent={activeAgent}
+                isLoading={isLoading}
+                onOpenPromptLibrary={() => setIsPromptLibraryModalOpen(true)}
+                currentUser={user}
+              />
+            </ErrorBoundary>
 
             {/* Right Side Widgets Panel (White sidebar in light mode) */}
             <RightWidgets
@@ -376,6 +391,8 @@ export default function App() {
               onRemoveSavedMessage={(id) => setSavedMessages((prev) => prev.filter((m) => m.id !== id))}
               onSelectPrompt={(promptText) => handleSendMessage(promptText)}
               onOpenPromptLibraryModal={() => setIsPromptLibraryModalOpen(true)}
+              isOpenMobile={isRightSidebarOpen}
+              onCloseMobile={() => setIsRightSidebarOpen(false)}
             />
           </div>
         </div>

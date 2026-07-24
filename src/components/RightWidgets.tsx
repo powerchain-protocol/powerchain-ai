@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {
+import { X, 
   RefreshCw,
   Zap,
   ShieldCheck,
@@ -15,6 +15,7 @@ import {
 import { PromptTemplate, ChatSkeleton, ChatMessage } from '../types';
 import { SavedMessages } from './saved-messages';
 import { AIIcons } from './ai-icons';
+import { GridHealthChart } from './GridHealthChart';
 
 interface RightWidgetsProps {
   suggestions: { id: string; text: string; icon: string }[];
@@ -24,6 +25,8 @@ interface RightWidgetsProps {
   onRemoveSavedMessage?: (id: string) => void;
   onSelectPrompt: (promptText: string) => void;
   onOpenPromptLibraryModal: () => void;
+  isOpenMobile?: boolean;
+  onCloseMobile?: () => void;
 }
 
 export const RightWidgets: React.FC<RightWidgetsProps> = ({
@@ -34,6 +37,8 @@ export const RightWidgets: React.FC<RightWidgetsProps> = ({
   onRemoveSavedMessage = () => {},
   onSelectPrompt,
   onOpenPromptLibraryModal,
+  isOpenMobile = false,
+  onCloseMobile = () => {},
 }) => {
   const [activeCategory, setActiveCategory] = useState<'All' | 'Analytics' | 'Reports' | 'Operations'>('All');
   const [suggestionList, setSuggestionList] = useState(suggestions);
@@ -49,11 +54,34 @@ export const RightWidgets: React.FC<RightWidgetsProps> = ({
     setSuggestionList(shuffled);
   };
 
+  const containerClasses = `
+    flex flex-col w-72 md:w-80 bg-white dark:bg-zinc-900 border-l border-gray-200/80 dark:border-zinc-800 p-5 space-y-6 overflow-y-auto custom-scrollbar shrink-0
+    ${isOpenMobile ? 'fixed inset-y-0 right-0 z-50 shadow-2xl' : 'hidden xl:flex'}
+  `;
+
   return (
-    <aside
-      id="right-widgets-panel"
-      className="hidden xl:flex flex-col w-72 xl:w-80 bg-white dark:bg-zinc-900 border-l border-gray-200/80 dark:border-zinc-800 p-5 space-y-6 overflow-y-auto custom-scrollbar shrink-0"
-    >
+    <>
+      {isOpenMobile && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 xl:hidden"
+          onClick={onCloseMobile}
+        />
+      )}
+      <aside
+        id="right-widgets-panel"
+        className={containerClasses}
+      >
+        {/* Mobile Close Button */}
+        {isOpenMobile && (
+          <div className="flex justify-end xl:hidden mb-2 -mt-2 -mr-2">
+            <button
+              onClick={onCloseMobile}
+              className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       {/* 1. SAVED MESSAGES & BOOKMARKS */}
       <SavedMessages
         savedMessages={savedMessages}
@@ -160,6 +188,10 @@ export const RightWidgets: React.FC<RightWidgetsProps> = ({
           PowerChain AI automatically recalculates grid settlements and battery dispatch cycles every 15 minutes.
         </p>
       </div>
+
+      {/* 5. GRID HEALTH VISUALIZATION */}
+      <GridHealthChart />
     </aside>
+    </>
   );
 };

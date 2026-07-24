@@ -1,7 +1,9 @@
 {
-  "name": "react-example",
+  "name": "powerchain-ai",
+  "description": "Tokenized Grid Intelligence & Sovereign AI Infrastructure for Rebewable Energy Networks",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.9.0-beta",
+  "licence": "MIT",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",

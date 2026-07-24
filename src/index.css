@@ -1,1 +1,52 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-powerchain: 'PowerChain', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  
+  body {
+    font-family: var(--font-powerchain);
+  }
+}
+
+@font-face {
+  font-family: 'PowerChain';
+  src: local('PowerChain-Medium'), local('Plus Jakarta Sans Medium');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'PowerChain';
+  src: local('PowerChain-Light'), local('Plus Jakarta Sans Light');
+  font-weight: 300;
+}
+
+@layer utilities {
+  /* Hide scrollbar for main window/body */
+  body::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Custom thin scrollbar for sidebars and specific containers */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-zinc-700 rounded-full;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-zinc-600;
+  }
+}

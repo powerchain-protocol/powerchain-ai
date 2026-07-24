@@ -33,25 +33,25 @@ export const MessageItem: React.FC<MessagesProps> = ({ message, isSaved = false,
 
   return (
     <div
-      className={`group flex items-start gap-3 my-4 p-4 rounded-2xl transition-all ${
+      className={`group flex flex-col sm:flex-row items-start gap-3 my-4 p-4 rounded-2xl transition-all ${
         isUser
-          ? 'bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/20 ml-auto max-w-[85%] text-slate-900 dark:text-zinc-100'
-          : 'bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800/90 shadow-2xs max-w-[92%]'
+          ? 'bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/20 ml-auto max-w-[95%] sm:max-w-[85%] text-slate-900 dark:text-zinc-100 shadow-sm hover:shadow-md'
+          : 'bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800/90 shadow-md hover:shadow-lg max-w-[100%] sm:max-w-[95%] md:max-w-[92%]'
       }`}
     >
       {/* Avatar */}
-      <div className="shrink-0 mt-0.5">
+      <div className="shrink-0 sm:mt-0.5 self-end sm:self-auto order-2 sm:order-1 mt-2">
         {isUser ? (
           <Avatar name="User" size="sm" variant="dark-green" />
         ) : (
-          <div className="w-8 h-8 rounded-xl bg-emerald-900 dark:bg-emerald-800 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-emerald-900 dark:bg-emerald-800 text-white flex items-center justify-center font-bold text-xs shadow-md border border-emerald-700/50">
             <Zap className="w-4 h-4 text-emerald-300 fill-current" />
           </div>
         )}
       </div>
 
       {/* Message Body & Metadata */}
-      <div className="flex-1 min-w-0 space-y-2">
+      <div className="flex-1 min-w-0 space-y-2 order-1 sm:order-2 w-full">
         {/* Header Badges */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap text-xs">

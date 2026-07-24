@@ -19,7 +19,7 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
   return (
     <>
       <Button
-        variant={isConnected ? 'framed-dark-green' : 'framed-dark-white'}
+        variant={isConnected ? 'framed-dark-green' : 'dark-green'}
         size={size}
         onClick={() => setIsModalOpen(true)}
         icon={isConnected ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Wallet className="w-3.5 h-3.5" />}

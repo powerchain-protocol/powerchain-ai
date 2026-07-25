@@ -1,0 +1,80 @@
+[workspace]
+members = [
+    "programs/asset-registry",
+    "programs/generator-registry",
+    "programs/settlement",
+    "programs/pwrc-token",
+    "programs/rec-nft",
+    "programs/carbon-registry",
+    "programs/guarantee-of-origin",
+    "programs/treasury",
+    "programs/governance",
+    "programs/marketplace",
+    "programs/compliance",
+    "programs/bridge",
+]
+
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["PowerChain"]
+license = "Proprietary"
+repository = "https://github.com/powerchain/powerchain-programs"
+homepage = "https://powerchain.ai"
+description = "Enterprise Renewable Infrastructure Programs"
+
+[workspace.dependencies]
+
+# Anchor
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl = "0.31.1"
+
+# Solana
+solana-program = "2.1"
+
+# Serialization
+borsh = "1.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+thiserror = "2"
+
+# Utilities
+bytemuck = { version = "1.23", features = ["derive"] }
+num-traits = "0.2"
+
+# Math
+uint = "0.10"
+
+# SPL
+spl-token = "7"
+spl-associated-token-account = "6"
+
+# Metaplex
+mpl-token-metadata = "5"
+
+# Hashing
+sha2 = "0.10"
+
+# Time
+chrono = { version = "0.4", default-features = false }
+
+# Testing
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[profile.release]
+overflow-checks = true
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+overflow-checks = true
+
+[workspace.metadata.powerchain]
+platform = "PowerChain Programs"
+network = "Solana"
+framework = "Anchor"

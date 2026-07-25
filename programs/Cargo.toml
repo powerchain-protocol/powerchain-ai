@@ -21,8 +21,8 @@ version = "0.1.0"
 edition = "2021"
 authors = ["PowerChain"]
 license = "Proprietary"
-repository = "https://github.com/powerchain/powerchain-programs"
-homepage = "https://powerchain.ai"
+repository = "https://github.com/powerchain-protocol/powerchain-programs"
+homepage = "https://powerchain.energy"
 description = "Enterprise Renewable Infrastructure Programs"
 
 [workspace.dependencies]

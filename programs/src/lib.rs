@@ -1,4 +1,4 @@
-// PowerChain AI Sovereign Energy Credit Clearing Anchor Program
+// PowerChain AI Renewable Energy Credit (REC) Clearing Anchor Program
 // Program ID: PWRC111111111111111111111111111111111111111
 
 use anchor_lang::prelude::*;

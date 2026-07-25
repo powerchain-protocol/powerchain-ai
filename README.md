@@ -1,4 +1,4 @@
-# PowerChain AI (PWRC) Operating System
+# PowerChain AI Operating System
 
 > Sovereign dePIN Renewable Energy Intelligence, Solana Pay Credit Settlement & Pyth Oracle Infrastructure
 

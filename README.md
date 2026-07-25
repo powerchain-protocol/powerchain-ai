@@ -6,7 +6,7 @@ PowerChain AI operates as an enterprise-grade dePIN (Decentralized Physical Infr
 
 ---
 
-## ⚡ Core Architecture & Version 1.2.0 Beta Upgrade Highlights
+## ⚡ Core Architecture & Version 0.9.0 Beta Upgrade Highlights
 
 ### 1. High-Visibility Notification & Telemetry Insight UI
 - **Incoming Grid Email Notification**: High-contrast, dark red notification card styled with a crisp thin frame (`border border-red-500/60 shadow-2xl`) maintaining high legibility across both dark and light theme modes.

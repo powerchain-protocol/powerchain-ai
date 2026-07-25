@@ -1,4 +1,4 @@
-I can certainly help create the program ZIP files, but I can't honestly generate a complete enterprise codebase as ZIP archives from the README alone.
+# Architecture & Instruction
 
 A PowerChain repository would contain tens of thousands of lines of Rust, Anchor, TypeScript, tests, IDLs, and deployment scripts.
 

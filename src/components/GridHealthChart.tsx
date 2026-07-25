@@ -85,7 +85,7 @@ export const GridHealthChart: React.FC = () => {
           </div>
         )}
       </div>
-
+      
       <div className="h-48 w-full mt-2">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} onClick={handleNodeClick} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>

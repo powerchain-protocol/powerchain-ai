@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Wallet, CheckCircle2 } from 'lucide-react';
 import { useWallet } from './wallet-provider';
 import { WalletConnectModal } from './wallet-connect-modal';
-import { Button } from './button';
+import { Button } from './Button';
 
 interface WalletButtonProps {
   className?: string;
@@ -19,15 +19,17 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
   return (
     <>
       <Button
-        variant={isConnected ? 'framed-dark-green' : 'dark-green'}
+        variant="darkGreen"
         size={size}
         onClick={() => setIsModalOpen(true)}
-        icon={isConnected ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Wallet className="w-3.5 h-3.5" />}
-        className={className}
+        className={`flex items-center gap-1.5 ${className}`}
       >
-        {isConnected && address
-          ? `${address.slice(0, 6)}...${address.slice(-4)}`
-          : 'Connect Wallet'}
+        <Wallet className="w-4 h-4 shrink-0" />
+        <span className="hidden sm:inline">
+          {isConnected && address
+            ? `${address.slice(0, 6)}...${address.slice(-4)}`
+            : 'Connect Wallet'}
+        </span>
       </Button>
 
       <WalletConnectModal

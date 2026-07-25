@@ -3,55 +3,57 @@ import { WebSocketStatus } from '../types';
 
 export function useWebSocket(onMessageReceived?: (data: any) => void) {
   const [status, setStatus] = useState<WebSocketStatus>('disconnected');
-  const wsRef = useRef<WebSocket | null>(null);
+  const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
 
     setStatus('connecting');
-    const socket = new WebSocket(wsUrl);
-    wsRef.current = socket;
 
-    socket.onopen = () => {
-      setStatus('connected');
-      console.log('Real-Time WebSocket Gateway connected');
-    };
+    const worker = new Worker(new URL('../workers/ws.worker.ts', import.meta.url), {
+      type: 'module',
+    });
+    
+    workerRef.current = worker;
 
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
+    worker.onmessage = (event) => {
+      const { type, status: newStatus, data } = event.data;
+      if (type === 'status') {
+        setStatus(newStatus);
+        if (newStatus === 'connected') {
+          console.log('Real-Time WebSocket Gateway connected via Worker');
+        } else if (newStatus === 'disconnected') {
+          console.warn('WebSocket disconnected in Worker');
+        }
+      } else if (type === 'message') {
         if (onMessageReceived) {
           onMessageReceived(data);
         }
-      } catch (e) {
-        console.error('Failed to parse WebSocket message:', e);
       }
     };
 
-    socket.onerror = (err) => {
-      console.warn('WebSocket error, retrying gracefully...', err);
-      setStatus('disconnected');
-    };
-
-    socket.onclose = () => {
-      setStatus('disconnected');
-    };
+    worker.postMessage({
+      type: 'connect',
+      payload: { url: wsUrl },
+    });
 
     return () => {
-      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
-        socket.close();
-      }
+      worker.postMessage({ type: 'disconnect' });
+      worker.terminate();
     };
   }, [onMessageReceived]);
 
   const sendMessage = useCallback((data: any) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(data));
+    if (workerRef.current && status === 'connected') {
+      workerRef.current.postMessage({
+        type: 'send',
+        payload: { data },
+      });
       return true;
     }
     return false;
-  }, []);
+  }, [status]);
 
   return { status, sendMessage };
 }

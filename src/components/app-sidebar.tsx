@@ -24,7 +24,7 @@ import {
 import { ChatSession, AIAgent, UserProfile } from '../types';
 import { Logo } from './logo';
 import { Avatar } from './avatar';
-import { Button } from './button';
+import { Button } from './Button';
 
 interface AppSidebarProps {
   sessions: ChatSession[];
@@ -105,21 +105,21 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           isOpenMobile ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        {/* Header Branding */}
-        <div className="p-3 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between min-h-[64px]">
-          {!isCollapsed ? (
-            <div className="shrink-0 overflow-hidden">
-              <Logo size="sm" showSubtitle={true} />
+        {/* Header Branding / Controls (No Logo) */}
+        <div className="p-3 flex items-center justify-end min-h-[64px]">
+          {isCollapsed ? (
+            <div className="w-full flex flex-col items-center gap-3">
+              {onToggleCollapse && (
+                <button
+                  onClick={onToggleCollapse}
+                  className="hidden lg:flex p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
+                  title="Expand sidebar"
+                >
+                  <Layers className="w-4 h-4" />
+                </button>
+              )}
             </div>
           ) : (
-            <div className="w-full flex flex-col items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-900 dark:bg-emerald-800 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0 cursor-pointer" onClick={onToggleCollapse} title="Expand sidebar">
-                <Zap className="w-5 h-5 text-emerald-300 fill-current" />
-              </div>
-            </div>
-          )}
-
-          {!isCollapsed && (
             <div className="flex items-center gap-1 shrink-0">
               {onToggleCollapse && (
                 <button
@@ -167,30 +167,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             )}
           </button>
         </div>
-
-        {/* Search Input */}
-        {!isCollapsed && (
-          <div className="px-3 pb-2">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500" />
-              <input
-                id="sidebar-chat-search"
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search chats..."
-                className="w-full bg-gray-100 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700/80 rounded-lg pl-8 pr-8 py-1.5 text-xs text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
-              />
-              <button
-                id="search-filter-btn"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200"
-                title="Filter"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Main Navigation Scrollable */}
         <div className="flex-1 overflow-y-auto px-3 space-y-5 py-2 custom-scrollbar">

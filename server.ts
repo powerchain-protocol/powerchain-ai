@@ -26,7 +26,122 @@ const getGeminiClient = () => {
 
 // API Health Check
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString(), platform: "PowerAI v1.0 (Astra)" });
+  res.json({ status: "ok", timestamp: new Date().toISOString(), platform: "PowerAI v1.2 (Astra)" });
+});
+
+// API v1 Endpoint Routes
+app.get("/api/v1/health", (_req, res) => {
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    services: {
+      solanaRpc: true,
+      pythOracle: true,
+      geminiAi: true,
+      bessTelemetryNode: true,
+    },
+    version: "1.2.0-powerchain",
+  });
+});
+
+app.get("/api/v1/telemetry", (_req, res) => {
+  res.json({
+    nodes: [
+      { id: "node-alpha", name: "Mojave Solar Array", powerOutputMW: 108.4, uptime: "99.99%", latency: "12ms", region: "CAISO-South" },
+      { id: "node-beta", name: "Silicon Valley BESS-04", powerOutputMW: 42.1, uptime: "99.95%", latency: "15ms", region: "CAISO-North", bessSoc: "88.4%" },
+      { id: "node-gamma", name: "Texas Wind Farm", powerOutputMW: 78.4, uptime: "99.98%", latency: "18ms", region: "ERCOT-West" },
+      { id: "node-columbia", name: "Columbia River Hydro", powerOutputMW: 150.0, uptime: "99.99%", latency: "11ms", region: "BPA-Northwest" },
+    ],
+    totalOutputMWh: 420.5,
+    oracleVerified: true,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/api/v1/telemetry/nodes", (req, res) => {
+  const nodeId = req.query.id as string;
+  res.json({
+    nodeId: nodeId || "node-alpha",
+    name: nodeId === "node-beta" ? "Silicon Valley BESS-04" : "Mojave Solar Array",
+    powerOutputMW: 108.4,
+    voltageV: 480.2,
+    frequencyHz: 60.01,
+    temperatureC: 38.2,
+    pythOracleLatencyMs: 12.4,
+    status: "online",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/api/v1/search", (req, res) => {
+  const q = ((req.query.q as string) || "").toLowerCase();
+  const mockResults = [
+    { id: "p-01", category: "prompt", title: "BESS Battery Discharge Strategy", subtitle: "Analyze BESS-04 state-of-charge curves" },
+    { id: "node-alpha", category: "node", title: "Mojave Desert Solar Array #04", subtitle: "120.4 MW • CAISO-South • 12.4ms" },
+    { id: "sol-01", category: "asset", title: "Mojave Solar Array", subtitle: "120 MW Solar PV Plant" },
+    { id: "model-gemini", category: "model", title: "Gemini 3.5 Flash", subtitle: "Google Cloud AI • 2M Context" },
+  ].filter((r) => !q || r.title.toLowerCase().includes(q) || r.subtitle.toLowerCase().includes(q));
+
+  res.json({
+    query: q,
+    resultsCount: mockResults.length,
+    results: mockResults,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/api/v1/credits", (_req, res) => {
+  res.json({
+    symbol: "PWRC",
+    userBalance: 42500,
+    usdEquivalent: 10625.0,
+    mwhEquivalent: 425,
+    mintAddress: "PWRC111111111111111111111111111111111111111",
+  });
+});
+
+app.post("/api/v1/solana-pay/create", (req, res) => {
+  const { amountSol, memo } = req.body;
+  const ref = `solpay_ref_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  res.json({
+    reference: ref,
+    recipient: "PWRC111111111111111111111111111111111111111",
+    amountSol: amountSol || 1.5,
+    memo: memo || "PowerChain Energy Credit Settlement",
+    solanaPayUrl: `solana:PWRC111111111111111111111111111111111111111?amount=${amountSol || 1.5}&reference=${ref}`,
+  });
+});
+
+app.get("/api/v1/actions/settle-credit", (_req, res) => {
+  res.json({
+    icon: "https://powerchain.energy/logo.png",
+    title: "Settle 10 MWh Renewable Power Credits",
+    description: "Mint and clear tokenized power credits via Pyth Solana Oracle.",
+    label: "Settle Credits",
+    links: {
+      actions: [
+        {
+          icon: "https://powerchain.energy/logo.png",
+          title: "Clear 1000 PWRC",
+          description: "Execute Solana Pay settlement",
+          label: "1000 PWRC ($250)",
+          href: "/api/v1/actions/settle-credit?amount=1000",
+        },
+      ],
+    },
+  });
+});
+
+app.get("/api/v1/pyth", (_req, res) => {
+  res.json({
+    feeds: {
+      "SOL/USD": { price: 180.5, confidence: 0.999 },
+      "PWRC/USD": { price: 0.25, confidence: 0.999 },
+      "ENERGY_MWH/USD": { price: 45.0, confidence: 0.998 },
+    },
+    updatedAt: new Date().toISOString(),
+  });
 });
 
 // Chat AI Endpoint
@@ -103,7 +218,7 @@ Never fabricate unverified facts; reference platform telemetry metrics when appr
 
         responseText = result.text || "Workflow completed successfully.\n\n• Analysis recorded\n• Telemetry synchronized";
       } catch (geminiError: any) {
-        console.error("Gemini API error:", geminiError);
+        console.error("Gemini API error (fallback used):", geminiError.message || "Unknown error");
         responseText = `[PowerAI Astra Telemetry] Processed query: "${prompt}".\n\nEnergy infrastructure telemetry reflects optimal operational efficiency across all monitored solar and wind assets. Grid frequency remains locked at 60.02 Hz with automated battery buffer storage at 88% capacity.`;
       }
     } else {

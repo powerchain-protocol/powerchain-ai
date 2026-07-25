@@ -241,3 +241,13 @@ export const chatSkeletonsList: ChatSkeleton[] = [
     defaultPrompt: 'Run an automated ESG compliance audit checking NERC grid reliability rules, carbon credit certification, and environmental disclosure specs.',
   },
 ];
+export const availableModels = [
+  { name: 'Gemini 3.5 Flash', badge: 'Default', desc: 'Google low-latency 2M context AI', provider: 'google' as const },
+  { name: 'Gemini 3.1 Pro Thinking', badge: 'Reasoning', desc: 'Complex grid logic & code synthesis', provider: 'google' as const },
+  { name: 'GPT-4o Omnimodal', badge: 'OpenAI', desc: 'High intelligence multi-modal model', provider: 'openai' as const },
+  { name: 'Claude 3.5 Sonnet', badge: 'Anthropic', desc: 'Precision code & Anchor smart contracts', provider: 'anthropic' as const },
+  { name: 'DeepSeek-R1 CoT', badge: 'DeepSeek', desc: 'Chain-of-thought mathematical proof solver', provider: 'deepseek' as const },
+  { name: 'Llama 3.3 70B', badge: 'Meta Open', desc: 'Open-weight sovereign MPC private model', provider: 'meta' as const },
+  { name: 'Grok 3 Reasoning', badge: 'xAI', desc: 'Real-time telemetry & macro trend analysis', provider: 'xai' as const },
+  { name: 'PowerChain Domain-v2', badge: 'Sovereign', desc: 'Trained on grid & DePIN datasets', provider: 'powerchain' as const },
+];

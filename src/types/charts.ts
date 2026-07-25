@@ -8,6 +8,9 @@ export interface EnergyProductionData {
   date: string;
   'This Month': number;
   'Last Month': number;
+  powerOutput?: string;
+  uptime?: string;
+  latency?: string;
 }
 
 export interface EmissionsData {
@@ -21,6 +24,21 @@ export interface BatteryTelemetryData {
   'BESS-04 State of Charge (%)': number;
   'Grid Frequency (Hz)': number;
   'Temperature (C)': number;
+}
+
+export interface GranularNodeTelemetryChartPoint {
+  time: string;
+  health: number;
+  load: number;
+  node: string;
+  region?: string;
+  uptime: string;
+  latency: string;
+  power: string;
+  capacityMW?: number;
+  frequency?: string;
+  batteryLevel?: string;
+  oracleStatus?: string;
 }
 
 export interface ChartSeries {

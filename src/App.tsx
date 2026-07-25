@@ -10,6 +10,7 @@ import { PromptLibraryModal } from './components/PromptLibraryModal';
 import { AuthModal } from './components/AuthModal';
 import { CommandPalette } from './components/CommandPalette';
 import { WalletProvider } from './components/wallet-provider';
+import { CookieBanner } from './components/cookies';
 import { useWebSocket } from './hooks/useWebSocket';
 import {
   initialChatSessions,
@@ -321,6 +322,26 @@ export default function App() {
     }
   };
 
+  const handleAddDirectMessage = (message: ChatMessage) => {
+    setSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === activeSessionId) {
+          return {
+            ...s,
+            messages: [...s.messages, message],
+          };
+        }
+        return s;
+      })
+    );
+
+    sendWsMessage({
+      type: 'chat_message',
+      sessionId: activeSessionId,
+      message,
+    });
+  };
+
   const handleOpenSettingsTab = (tab = 'model') => {
     setSettingsModalTab(tab);
     setIsSettingsModalOpen(true);
@@ -328,46 +349,47 @@ export default function App() {
 
   return (
     <WalletProvider>
-      <div className="flex h-screen w-screen overflow-hidden bg-gray-100/70 dark:bg-[#071210] text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-emerald-800 selection:text-white">
-        {/* Left Navigation Sidebar (White background in light mode) */}
-        <AppSidebar
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onSelectSession={setActiveSessionId}
-          onNewChat={handleNewChat}
-          agents={agents}
-          activeAgentId={activeAgentId}
-          onSelectAgent={setActiveAgentId}
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-gray-100/70 dark:bg-[#071210] text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-emerald-800 selection:text-white">
+        {/* Top Header Shell (White background in light mode) */}
+        <HeaderShell
+          user={user}
+          settings={settings}
+          onUpdateSettings={handleUpdateSettings}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          onToggleRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
           onOpenSettings={handleOpenSettingsTab}
-          onOpenExploreAgents={() => setIsExploreAgentsModalOpen(true)}
-          isOpenMobile={isMobileSidebarOpen}
-          onCloseMobile={() => setIsMobileSidebarOpen(false)}
-          onDeleteSession={handleDeleteSession}
-          onTogglePinSession={handleTogglePinSession}
-          currentUser={user}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          webSocketStatus={webSocketStatus}
         />
-
-        {/* Main Container Shell (Header + Chat Workspace + Right Widgets) */}
-        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-          {/* Top Header Shell (White background in light mode) */}
-          <HeaderShell
-            user={user}
-            settings={settings}
-            onUpdateSettings={handleUpdateSettings}
-            onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-            onToggleRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-            isDarkMode={isDarkMode}
-            onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          {/* Left Navigation Sidebar (White background in light mode) */}
+          <AppSidebar
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSelectSession={setActiveSessionId}
+            onNewChat={handleNewChat}
+            agents={agents}
+            activeAgentId={activeAgentId}
+            onSelectAgent={setActiveAgentId}
             onOpenSettings={handleOpenSettingsTab}
+            onOpenExploreAgents={() => setIsExploreAgentsModalOpen(true)}
+            isOpenMobile={isMobileSidebarOpen}
+            onCloseMobile={() => setIsMobileSidebarOpen(false)}
+            onDeleteSession={handleDeleteSession}
+            onTogglePinSession={handleTogglePinSession}
+            currentUser={user}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
-            webSocketStatus={webSocketStatus}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
 
-          {/* Workspace Layout */}
-          <div className="flex-1 flex min-h-0 overflow-hidden">
+          {/* Main Container Shell (Chat Workspace + Right Widgets) */}
+          <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+            {/* Workspace Layout */}
+            <div className="flex-1 flex min-h-0 overflow-hidden">
             {/* Main Chat Interface Workspace */}
             <ErrorBoundary>
               <ChatInterface
@@ -375,10 +397,12 @@ export default function App() {
                 settings={settings}
                 onUpdateSettings={handleUpdateSettings}
                 onSendMessage={handleSendMessage}
+                onAddMessage={handleAddDirectMessage}
                 activeAgent={activeAgent}
                 isLoading={isLoading}
                 onOpenPromptLibrary={() => setIsPromptLibraryModalOpen(true)}
                 currentUser={user}
+                onOpenSettings={handleOpenSettingsTab}
               />
             </ErrorBoundary>
 
@@ -394,6 +418,7 @@ export default function App() {
               isOpenMobile={isRightSidebarOpen}
               onCloseMobile={() => setIsRightSidebarOpen(false)}
             />
+          </div>
           </div>
         </div>
 
@@ -452,6 +477,9 @@ export default function App() {
           onToggleSidebarCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           onExecutePrompt={(promptText) => handleSendMessage(promptText)}
         />
+        
+        {/* Cookie Consent Banner */}
+        <CookieBanner />
       </div>
     </WalletProvider>
   );

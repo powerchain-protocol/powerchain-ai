@@ -10,7 +10,8 @@ import { X,
   Cloud,
   DollarSign,
   PieChart,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { PromptTemplate, ChatSkeleton, ChatMessage } from '../types';
 import { SavedMessages } from './saved-messages';
@@ -178,6 +179,54 @@ export const RightWidgets: React.FC<RightWidgetsProps> = ({
         </div>
       </div>
 
+      {/* SUGGESTED OPERATIONS WORKFLOWS CARD */}
+      <div className="p-4 bg-zinc-900/90 border border-zinc-800 rounded-2xl space-y-3">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <h4 className="font-bold text-xs text-white">Suggested Operations Workflows</h4>
+          </div>
+          <span className="text-[9.5px] text-zinc-400 font-mono">4 Workflows</span>
+        </div>
+
+        <div className="space-y-2">
+          <button
+            onClick={() => onSelectPrompt("Execute CAISO 4-hour BESS battery arbitrage discharge cycle.")}
+            className="w-full p-2.5 bg-zinc-950/60 hover:bg-zinc-800/80 border border-zinc-800/80 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div>
+              <p className="text-[11px] font-bold text-zinc-200 group-hover:text-emerald-400">BESS Arbitrage Cycle</p>
+              <p className="text-[9.5px] text-zinc-400">4-hr CAISO peak power dispatch</p>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+          </button>
+
+          <button
+            onClick={() => onSelectPrompt("Clear 1,000 PWRC tokenized power credits via Solana Pay.")}
+            className="w-full p-2.5 bg-zinc-950/60 hover:bg-zinc-800/80 border border-zinc-800/80 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div>
+              <p className="text-[11px] font-bold text-zinc-200 group-hover:text-emerald-400">Solana Pay Credit Settlement</p>
+              <p className="text-[9.5px] text-zinc-400">1,000 PWRC clearing ($250 USD)</p>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+          </button>
+
+          <button
+            onClick={() => onSelectPrompt("Summarize incoming Gmail grid telemetry notification and send PDF digest.")}
+            className="w-full p-2.5 bg-zinc-950/60 hover:bg-zinc-800/80 border border-zinc-800/80 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div>
+              <p className="text-[11px] font-bold text-zinc-200 group-hover:text-emerald-400">Gmail Workspace Digest</p>
+              <p className="text-[9.5px] text-zinc-400">Auto-summarize telemetry receipts</p>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+          </button>
+        </div>
+      </div>
+
       {/* 4. HIGHLIGHT CARD */}
       <div className="p-4 bg-emerald-950 text-emerald-100 border border-emerald-800/80 rounded-xl shadow-xs">
         <div className="flex items-center gap-2 mb-1.5">
@@ -187,6 +236,52 @@ export const RightWidgets: React.FC<RightWidgetsProps> = ({
         <p className="text-xs text-emerald-200/90 leading-relaxed font-normal">
           PowerChain AI automatically recalculates grid settlements and battery dispatch cycles every 15 minutes.
         </p>
+      </div>
+
+      {/* TELEMETRY INSIGHT DARK GREEN THIN-FRAMED CARD */}
+      <div className="p-4 bg-emerald-950/20 dark:bg-emerald-950/40 border border-emerald-700/30 rounded-xl space-y-3.5 text-emerald-100 shadow-lg relative overflow-hidden">
+        {/* Glow effect */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none -mr-10 -mt-10" />
+        
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-700/30 pb-3 gap-2 relative z-10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 shrink-0 flex items-center justify-center border border-emerald-500/30 shadow-inner">
+              <Activity className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-bold text-xs text-white uppercase tracking-wider">Telemetry Insight</h4>
+              <p className="text-[10px] text-emerald-300/80 font-mono flex items-center gap-1">
+                Pyth Oracle Synced <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" /> Sub-20ms
+              </p>
+            </div>
+          </div>
+          <span className="self-start sm:self-auto px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse whitespace-nowrap shadow-[0_0_8px_rgba(52,211,153,0.2)]">
+            LIVE DEPIN
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-[11px] relative z-10">
+          <div className="p-3 bg-zinc-950/40 dark:bg-zinc-950/60 rounded-xl border border-emerald-700/20 space-y-1 backdrop-blur-sm shadow-sm hover:border-emerald-500/40 transition-colors">
+            <p className="text-emerald-400/80 text-[10px] font-mono uppercase">Total Power Output</p>
+            <p className="font-bold text-white text-sm">420.5 <span className="text-xs text-emerald-300">MWh</span></p>
+            <p className="text-[9px] text-emerald-400 font-mono font-semibold">+4.2% Peak Efficiency</p>
+          </div>
+          <div className="p-3 bg-zinc-950/40 dark:bg-zinc-950/60 rounded-xl border border-emerald-700/20 space-y-1 backdrop-blur-sm shadow-sm hover:border-emerald-500/40 transition-colors">
+            <p className="text-emerald-400/80 text-[10px] font-mono uppercase">Pyth Latency</p>
+            <p className="font-bold text-emerald-400 text-sm">14.2 <span className="text-xs">ms</span></p>
+            <p className="text-[9px] text-zinc-400 font-mono">Solana Finality</p>
+          </div>
+          <div className="p-3 bg-zinc-950/40 dark:bg-zinc-950/60 rounded-xl border border-emerald-700/20 space-y-1 backdrop-blur-sm shadow-sm hover:border-emerald-500/40 transition-colors">
+            <p className="text-emerald-400/80 text-[10px] font-mono uppercase">Grid Uptime</p>
+            <p className="font-bold text-white text-sm">99.98<span className="text-xs text-emerald-300">%</span></p>
+            <p className="text-[9px] text-emerald-400 font-mono font-semibold">12/12 Active Nodes</p>
+          </div>
+          <div className="p-3 bg-zinc-950/40 dark:bg-zinc-950/60 rounded-xl border border-emerald-700/20 space-y-1 backdrop-blur-sm shadow-sm hover:border-emerald-500/40 transition-colors">
+            <p className="text-emerald-400/80 text-[10px] font-mono uppercase">PWRC Mint Vault</p>
+            <p className="font-bold text-emerald-300 text-sm">42.5k <span className="text-xs">PWRC</span></p>
+            <p className="text-[9px] text-zinc-400 font-mono">$0.25 USD Index</p>
+          </div>
+        </div>
       </div>
 
       {/* 5. GRID HEALTH VISUALIZATION */}

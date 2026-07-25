@@ -1,0 +1,12 @@
+{
+  "rules": [
+    {
+      "pathPattern": "/api/v1/actions/settle-credit",
+      "apiPath": "/api/v1/actions/settle-credit"
+    },
+    {
+      "pathPattern": "/api/v1/actions/dispatch-bess",
+      "apiPath": "/api/v1/actions/dispatch-bess"
+    }
+  ]
+}

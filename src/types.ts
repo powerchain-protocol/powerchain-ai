@@ -22,6 +22,7 @@ export interface ChatMessage {
   actions?: string[];
   sources?: string[];
   agentId?: string;
+  isSaved?: boolean;
   attachments?: { name: string; size: string; type: string; url?: string }[];
 }
 

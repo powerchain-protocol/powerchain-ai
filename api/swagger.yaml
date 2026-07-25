@@ -1,18 +1,78 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: PowerChain API
-  version: 1.0.0
-  description: API for PowerChain Grid Intelligence and Sovereign AI Infrastructure
+  title: PowerChain AI Sovereign Grid Telemetry & Treasury API
+  description: OpenAPI 3.0 specification for PowerChain AI dePIN grid intelligence, Pyth oracles, Solana Pay, and PWRC token credit clearing.
+  version: 1.2.0
 paths:
   /api/health:
     get:
-      summary: Health check
+      summary: Protocol Base Health Check
       responses:
         '200':
-          description: OK
+          description: Base system operational
+  /api/v1/health:
+    get:
+      summary: Sovereign API v1 Health & Service Diagnostics
+      responses:
+        '200':
+          description: Granular node and oracle health diagnostics
+  /api/v1/telemetry:
+    get:
+      summary: Real-Time DePIN Node Telemetry
+      responses:
+        '200':
+          description: Live MW output, uptime, and sub-20ms Pyth latency metrics
+  /api/v1/telemetry/nodes:
+    get:
+      summary: Detailed Node Hardware & Sensor Diagnostic
+      parameters:
+        - name: id
+          in: query
+          description: Target dePIN node identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Single node voltage, current, frequency, and BESS state-of-charge metrics
+  /api/v1/search:
+    get:
+      summary: Global Sovereign DePIN & LLM Search
+      parameters:
+        - name: q
+          in: query
+          description: Search term for nodes, prompts, assets, or models
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Instant search results matching telemetry, workflows, assets, and AI providers
+  /api/v1/credits:
+    get:
+      summary: User PWRC Power Credits & Balance
+      responses:
+        '200':
+          description: Current PWRC token balance, USD valuation, and MWh equivalent
+  /api/v1/solana-pay/create:
+    post:
+      summary: Generate Solana Pay Request Reference
+      responses:
+        '200':
+          description: Solana Pay URL, reference key, and QR parameters
+  /api/v1/actions/settle-credit:
+    get:
+      summary: Solana Blinks / Actions Spec for Power Credit Settlement
+      responses:
+        '200':
+          description: Action specification object for Solana Blinks
+  /api/v1/pyth:
+    get:
+      summary: Pyth Oracle Price Feed Prices
+      responses:
+        '200':
+          description: Real-time price feeds for SOL, PWRC, and ENERGY_MWH
   /api/chat:
     post:
-      summary: Send chat message to AI inference node
+      summary: Send Prompt to PowerAI Gemini Analyst
       responses:
         '200':
-          description: AI Response
+          description: AI response with telemetry chart data

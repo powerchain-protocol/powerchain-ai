@@ -216,6 +216,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+              {mode === 'login' && (
+                <div className="flex items-center justify-between mt-1 mb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-300 text-black focus:ring-black dark:border-zinc-600 dark:focus:ring-white dark:bg-zinc-800" />
+                    <span className="text-xs text-gray-600 dark:text-zinc-400">Remember me</span>
+                  </label>
+                </div>
+              )}
+
               <button
                 type="submit"
                 className="w-full py-2.5 bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors mt-2"

@@ -1,58 +1,79 @@
-# PowerChain AI Operating System (PowerChain OS)
+# PowerChain AI (PWRC) Operating System
 
-> **Tokenized Grid Intelligence & Sovereign AI Infrastructure for Energy Networks**
+> Sovereign dePIN Renewable Energy Intelligence, Solana Pay Credit Settlement & Pyth Oracle Infrastructure
 
-PowerChain AI OS is an enterprise-grade, tokenized operations artifaction intelligence platform designed for smart grid operators, renewable energy assets, carbon offset registries, and battery energy storage systems (BESS).
-
----
-
-## ⚡ Key Architecture & Features
-
-### 1. Tokenized Chat Engine (PWRC)
-- **Tokenized Billing**: Every AI prompt consumes **PowerChain Tokens (PWRC)** (e.g., 10 PWRC per standard telemetry query).
-- **Bring Your Own AI API Key (BYOAI)**: Users can supply their own API keys (Google Gemini, OpenAI GPT-4o, Anthropic Claude 3.5 Sonnet, or Ollama Local) to bypass PWRC query deductions.
-- **Credit Top-Up System**: Integrated PWRC refill modal with embedded wallet support.
-
-### 2. Multi-Model AI Provider Suite (`/ai/providers.tsx`)
-- **Google Gemini 1.5 Pro / Flash**: Multimodal SCADA and grid telemetry analysis.
-- **Anthropic Claude 3.5 Sonnet**: Legal PPA contract compliance and settlement verification.
-- **OpenAI GPT-4o**: Carbon credit auditing and structured vision extraction.
-- **Ollama Local (Llama-3.3 70B)**: 100% air-gapped offline edge node execution.
-- **LoRA Fine-Tune v1.4**: Custom Low-Rank Adaptation trained on 2M renewable power plant telemetry records.
-
-### 3. Solana & Sui Multi-Chain Integration
-- **Pyth Oracle (`/ai/solana/pyth.tsx`)**: Real-time KWH/USD & MWH/USD price feeds with confidence intervals.
-- **Helius DAS Nodes (`/ai/solana/helius.tsx`)**: High-throughput sub-station RPC nodes.
-- **Jupiter & Raydium (`/ai/solana/jupiter.tsx`, `raydium.tsx`)**: Automated liquidity swaps for tokenized energy assets.
-- **Sui Cetus Protocol (`/sui/cetus.tsx`)**: Sui Network CLMM carbon credit pools.
-
-### 4. WebSocket & Real-Time Sync
-- **Live Updates**: Telemetry models and charts auto-sync over high-frequency websockets.
-
-### 5. MPC Embedded Wallet Framework
-- **Seedless Security**: 2-of-3 threshold signature scheme.
-- **Instant Transfers**: Transfer PWRC tokens across PowerChain L2, Solana, and Sui.
-
-### 6. Enterprise Command Palette (`Cmd + K`)
-- Keyboard-accessible global modal to trigger workflows, switch specialist agents, run forecasts, and toggle compact sidebar modes.
+PowerChain AI operates as an enterprise-grade dePIN (Decentralized Physical Infrastructure Network) intelligence platform that coordinates clean energy grid telemetry, battery storage (BESS) dispatch, tokenized power credit clearing, and automated Google Workspace notification workflows.
 
 ---
 
-## 🛠️ Getting Started
+## ⚡ Core Architecture & Version 1.2.0 Beta Upgrade Highlights
+
+### 1. High-Visibility Notification & Telemetry Insight UI
+- **Incoming Grid Email Notification**: High-contrast, dark red notification card styled with a crisp thin frame (`border border-red-500/60 shadow-2xl`) maintaining high legibility across both dark and light theme modes.
+- **Dark Green Telemetry Insight Card**: Prominent thin-framed card summarizing live dePIN power output (420.5 MWh), sub-20ms Pyth latency (14.2ms), uptime (99.98%), and PWRC vault mint stats.
+- **Dark AI & PWRC BETA Branding**: Sleek dark emblem branding with `PWRC BETA` status badges.
+
+### 2. Grid & Solana/Sui RPCs (`/src/services/rpc.ts`)
+- **Multi-Chain RPC Management**: Configurable cluster endpoints for Solana Mainnet-Beta, Pyth Hermes Oracle, Sui Network Mainnet, and Sovereign PowerChain RPCs.
+- **Interactive Ping & Failover**: Real-time ping testing for latency benchmarking and primary cluster failover selection in `SettingsModal.tsx`.
+
+### 3. System Logs & Clear Logs (`/src/services/logs.ts`)
+- **Log Stream Engine**: Structured log entries across levels (`info`, `warn`, `error`, `telemetry`, `audit`).
+- **Clear Logs Functionality**: Instant log reset capability in the Settings Modal audit log panel.
+
+### 4. User Profiles & Role-Based Access Control (`/src/data/users.ts` & `/src/services/roles.ts`)
+- **Demo Account Switcher**: Switch between *Sovereign Operator*, *Solana Treasury Vault Admin*, and *DePIN Protocol Architect*.
+- **Role Permissions Engine**: Granular permission checks (`telemetry.read`, `bess.dispatch`, `pwrc.mint`, `workspace.gmail.digest`).
+
+### 5. Multi-Model AI Providers & Brand Logos (`/src/components/information.tsx` & `/src/components/ai-provider-logos.tsx`)
+- **Real Brand Logos**: High-fidelity SVG vector logos for Google Gemini, OpenAI, Anthropic Claude, DeepSeek-R1, Meta Llama 3.3, xAI Grok 3, and PowerChain AI.
+- **Language Models Overview**: Specs for Gemini 3.5 Flash, Gemini 3.1 Pro Thinking, GPT-4o Omnimodal, Claude 3.5 Sonnet, DeepSeek-R1, Llama 3.3 70B, Grok 3, and PowerChain Domain-v2.
+
+### 6. Telemetry Service (`/src/services/telemetry.ts`) & Global Search (`/src/services/search.ts`)
+- **Telemetry Engine**: Query service for dePIN solar arrays, wind generation, hydro plants, and BESS storage banks.
+- **Global Search Service**: Sub-millisecond keyword lookup across nodes, prompts, renewable assets, and AI models.
+
+### 7. Search Icon Settings & Header Search Controls
+- **Header Global Search Bar**: Search bar with `Search` icon and `⌘K` keyboard shortcut badge in `HeaderShell.tsx`.
+- **Search & Shortcuts Modal Tab**: Customizable settings tab in `SettingsModal.tsx` for toggling search bar visibility, keyboard shortcuts, and default query scope filters.
+
+### 8. REST API v1 Infrastructure (`/api/v1/`) & OpenAPI 3.0 (`swagger.yaml`)
+- `GET /api/v1/health`: System health & service diagnostic status.
+- `GET /api/v1/telemetry`: Granular dePIN node telemetry snapshot.
+- `GET /api/v1/telemetry/nodes?id={nodeId}`: Hardware & sensor diagnostic for specific dePIN nodes.
+- `GET /api/v1/search?q={query}`: Global search endpoint returning matching nodes, prompts, assets, and models.
+- `GET /api/v1/credits`: User PWRC token balance, USD valuation, and MWh equivalent.
+- `POST /api/v1/solana-pay/create`: Generates Solana Pay URL and reference key.
+- `GET /api/v1/actions/settle-credit`: Solana Blinks / Actions specification.
+- `GET /api/v1/pyth`: Real-time Pyth oracle price feeds (SOL/USD, PWRC/USD, ENERGY_MWH/USD).
+- `swagger.yaml`: Complete OpenAPI 3.0 specification covering all REST endpoints.
+- `ApiClient` (`/src/api/api.ts`): Type-safe frontend client SDK.
+
+### 9. AI Agents & Skills Integration
+- **Agents (`/src/utils/agents.ts`)**: Defines AI personas (Grid Telemetry Analyst, Treasury Manager).
+- **Skills (`/src/utils/skills.ts`)**: Centralized skills registry covering telemetry integration, BESS dispatch, Solana settlement, and Gmail workspace digests.
+
+### 10. Web Workers & Real-Time WebSockets (`/src/workers/ws.worker.ts`)
+- **Off-Main-Thread WebSockets**: Real-time WebSocket connections and message parsing are handled via Web Workers to prevent main-thread UI blocking during high-frequency telemetry streaming.
+- **Resilient Reconnection**: Built-in exponential backoff and keep-alive ping mechanisms running independently in the worker context.
+
+---
+
+## 🚀 Quick Start
 
 ```bash
 # Install dependencies
 npm install
 
-# Run Vite development server
+# Run development server (Express + Vite on Port 3000)
 npm run dev
 
-# Build for production CommonJS bundle
+# Run linter
+npm run lint
+
+# Build for production
 npm run build
+
+# Start production server
+npm start
 ```
-
----
-
-## 🔒 Security & Privacy
-All API keys supplied via BYOAI mode are encrypted in local storage memory and proxied via server-side endpoints to keep credentials completely private.
-

@@ -1,9 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Settings, Sliders, Database, ShieldCheck, Layers, CreditCard, MessageSquare, HelpCircle, Key, RefreshCw, Sparkles, Check, Zap, User, FileText, Upload } from 'lucide-react';
+import { X, Settings, Sliders, Database, ShieldCheck, Layers, CreditCard, MessageSquare, HelpCircle, Key, RefreshCw, Sparkles, Check, Zap, User, FileText, Upload, Mail, Search, Trash2, Activity } from 'lucide-react';
 import { ChatSettings, UserProfile } from '../types';
 import { Coin } from './coin';
 import { Avatar } from './avatar';
 import { auditLogger, AuditEvent } from '../utils/audit-logger';
+import { initAuth, googleSignIn, logoutGmail, fetchEnergyEmails, createGmailDraft } from '../services/gmail';
+import { AIProviderIcon } from './ai-provider-logos';
+import { RpcService, RpcEndpointConfig } from '../services/rpc';
+import { logsService, SystemLogEntry } from '../services/logs';
+import { DEMO_USERS, PowerChainUserProfile } from '../data/users';
+import { UserRolesService } from '../services/roles';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,18 +37,102 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [geminiKey, setGeminiKey] = useState('');
   const [openaiKey, setOpenaiKey] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
+  const [deepseekKey, setDeepseekKey] = useState('');
+  const [xaiKey, setXaiKey] = useState('');
   const [ollamaHost, setOllamaHost] = useState('http://localhost:11434');
+  const [searchIconVisible, setSearchIconVisible] = useState(true);
+  const [searchShortcutEnabled, setSearchShortcutEnabled] = useState(true);
+  const [searchDefaultScope, setSearchDefaultScope] = useState<'all' | 'nodes' | 'prompts' | 'models'>('all');
   const [refilledSuccess, setRefilledSuccess] = useState(false);
   
+  const [rpcEndpoints, setRpcEndpoints] = useState<RpcEndpointConfig[]>(RpcService.getEndpoints());
+  const [systemLogs, setSystemLogs] = useState<SystemLogEntry[]>(logsService.getLogs());
+  const [activeDemoUser, setActiveDemoUser] = useState<PowerChainUserProfile>(UserRolesService.getCurrentUser());
+
   const [localAvatar, setLocalAvatar] = useState<string | null>(user.avatarUrl || null);
   const [logs, setLogs] = useState<AuditEvent[]>([]);
+  const [gmailUser, setGmailUser] = useState<any>(null);
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailLoading, setGmailLoading] = useState(false);
+  const [fetchedEmails, setFetchedEmails] = useState<any[]>([]);
+  const [gmailStatusMsg, setGmailStatusMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    initAuth(
+      (u) => {
+        setGmailUser(u);
+        setGmailConnected(true);
+      },
+      () => {
+        setGmailConnected(false);
+      }
+    );
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'audit') {
       setLogs(auditLogger.getLogs());
+      setSystemLogs(logsService.getLogs());
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const unsubLogs = logsService.subscribe(() => {
+      setSystemLogs([...logsService.getLogs()]);
+    });
+    const unsubRoles = UserRolesService.subscribe(() => {
+      setActiveDemoUser({ ...UserRolesService.getCurrentUser() });
+    });
+    return () => {
+      unsubLogs();
+      unsubRoles();
+    };
+  }, []);
+
+  const handleGmailSignIn = async () => {
+    setGmailLoading(true);
+    setGmailStatusMsg('');
+    try {
+      const res = await googleSignIn();
+      if (res) {
+        setGmailUser(res.user);
+        setGmailConnected(true);
+        setGmailStatusMsg('Successfully connected to Gmail via OAuth2.');
+        auditLogger.log({
+          action: 'Gmail OAuth2 Connected',
+          category: 'security',
+          details: `Connected Gmail account ${res.user.email}`,
+          status: 'success',
+        });
+      }
+    } catch (err: any) {
+      setGmailStatusMsg(`Gmail Connection Error: ${err.message || err}`);
+    } finally {
+      setGmailLoading(false);
+    }
+  };
+
+  const handleGmailLogout = async () => {
+    await logoutGmail();
+    setGmailConnected(false);
+    setGmailUser(null);
+    setFetchedEmails([]);
+    setGmailStatusMsg('Signed out of Gmail.');
+  };
+
+  const handleFetchEnergyEmails = async () => {
+    setGmailLoading(true);
+    try {
+      const emails = await fetchEnergyEmails('energy OR grid OR telemetry OR settlement OR power');
+      setFetchedEmails(emails);
+      setGmailStatusMsg(`Fetched ${emails.length} energy-related emails.`);
+    } catch (err: any) {
+      setGmailStatusMsg(`Error fetching emails: ${err.message || err}`);
+    } finally {
+      setGmailLoading(false);
+    }
+  };
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -62,10 +152,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const tabs = [
     { id: 'model', name: 'Model & LLM', icon: Settings },
     { id: 'api_keys', name: 'Bring Your Own AI Keys', icon: Key },
+    { id: 'search', name: 'Search & Shortcuts', icon: Search },
     { id: 'billing', name: 'PWRC Token Credits', icon: Zap },
     { id: 'preferences', name: 'Preferences', icon: Sliders },
     { id: 'security', name: 'Security & MPC', icon: ShieldCheck },
     { id: 'integrations', name: 'Grid & Solana/Sui RPCs', icon: Layers },
+    { id: 'gmail', name: 'Gmail Workspace', icon: Mail },
     { id: 'data', name: 'Data & Memory', icon: Database },
     { id: 'profile', name: 'Profile & Account', icon: User },
     { id: 'audit', name: 'Audit Logs', icon: FileText },
@@ -143,22 +235,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   
                   <div className="space-y-2">
                     {[
-                      { id: 'gpt4o', name: 'GPT-4o Omnimodal', desc: 'OpenAI (High Intelligence)', icon: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg' },
-                      { id: 'gemini-pro', name: 'Gemini 1.5 Pro', desc: 'Google 1M Context (Complex Reasoning)', icon: 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg' },
-                      { id: 'gemini-flash', name: 'Gemini 1.5 Flash', desc: 'Google (Ultra Speed)', icon: 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg' },
-                      { id: 'claude-sonnet', name: 'Claude 3.5 Sonnet', desc: 'Anthropic Logic', icon: 'https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg' },
-                      { id: 'domain-v2', name: 'PowerChain Domain-v2', desc: 'Specialized (MPC Private)', icon: null },
+                      { id: 'gemini-flash', name: 'Gemini 3.5 Flash', desc: 'Google 2M Context • Sub-15ms Latency (Default)', provider: 'google' as const },
+                      { id: 'gemini-pro', name: 'Gemini 3.1 Pro Thinking', desc: 'Google High Reasoning & Deep Synthesis', provider: 'google' as const },
+                      { id: 'gpt4o', name: 'GPT-4o Omnimodal', desc: 'OpenAI Omnimodal Intelligence', provider: 'openai' as const },
+                      { id: 'claude-sonnet', name: 'Claude 3.5 Sonnet', desc: 'Anthropic Precision Code & Contract Logic', provider: 'anthropic' as const },
+                      { id: 'deepseek-r1', name: 'DeepSeek-R1 CoT', desc: 'DeepSeek Step-by-Step Mathematical Solver', provider: 'deepseek' as const },
+                      { id: 'llama33', name: 'Llama 3.3 70B', desc: 'Meta Open-Weight MPC Private Model', provider: 'meta' as const },
+                      { id: 'grok3', name: 'Grok 3 Reasoning', desc: 'xAI Real-Time Telemetry & Macro Trends', provider: 'xai' as const },
+                      { id: 'domain-v2', name: 'PowerChain Domain-v2', desc: 'PowerChain DePIN Native Grid Engine', provider: 'powerchain' as const },
                     ].map(m => (
                       <div 
                         key={m.id}
                         onClick={() => onUpdateSettings({ model: m.name })}
                         className={`p-3 border rounded-xl flex items-center gap-3 cursor-pointer transition-all ${settings.model === m.name ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'border-gray-200 dark:border-zinc-700 hover:border-emerald-300 dark:hover:border-emerald-700 bg-white dark:bg-zinc-800'}`}
                       >
-                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-900 flex items-center justify-center p-1.5 shrink-0 overflow-hidden">
-                          {m.icon ? <img src={m.icon} alt={m.name} className="w-full h-full object-contain" /> : <Zap className="w-4 h-4 text-emerald-500" />}
+                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-900 flex items-center justify-center p-1.5 shrink-0 overflow-hidden border border-gray-200 dark:border-zinc-800">
+                          <AIProviderIcon provider={m.provider} className="w-5 h-5 text-emerald-500" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-bold text-sm text-gray-900 dark:text-zinc-100">{m.name}</p>
+                          <p className="font-bold text-xs text-gray-900 dark:text-zinc-100">{m.name}</p>
                           <p className="text-[10px] text-gray-500 dark:text-zinc-400">{m.desc}</p>
                         </div>
                         {settings.model === m.name && (
@@ -206,7 +301,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {useOwnKeys && (
                   <div className="space-y-3 pt-2">
                     <div>
-                      <label className="block font-semibold mb-1 text-gray-900 dark:text-zinc-100">Google Gemini API Key</label>
+                      <label className="flex items-center gap-2 font-semibold mb-1 text-gray-900 dark:text-zinc-100">
+                        <AIProviderIcon provider="google" className="w-4 h-4" />
+                        <span>Google Gemini API Key</span>
+                      </label>
                       <input
                         type="password"
                         value={geminiKey}
@@ -216,7 +314,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold mb-1 text-gray-900 dark:text-zinc-100">OpenAI API Key</label>
+                      <label className="flex items-center gap-2 font-semibold mb-1 text-gray-900 dark:text-zinc-100">
+                        <AIProviderIcon provider="openai" className="w-4 h-4 text-emerald-500" />
+                        <span>OpenAI API Key</span>
+                      </label>
                       <input
                         type="password"
                         value={openaiKey}
@@ -226,7 +327,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold mb-1 text-gray-900 dark:text-zinc-100">Anthropic Claude API Key</label>
+                      <label className="flex items-center gap-2 font-semibold mb-1 text-gray-900 dark:text-zinc-100">
+                        <AIProviderIcon provider="anthropic" className="w-4 h-4 text-amber-500" />
+                        <span>Anthropic Claude API Key</span>
+                      </label>
                       <input
                         type="password"
                         value={anthropicKey}
@@ -236,7 +340,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold mb-1 text-gray-900 dark:text-zinc-100">Ollama Local Instance Host</label>
+                      <label className="flex items-center gap-2 font-semibold mb-1 text-gray-900 dark:text-zinc-100">
+                        <AIProviderIcon provider="deepseek" className="w-4 h-4" />
+                        <span>DeepSeek API Key</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={deepseekKey}
+                        onChange={(e) => setDeepseekKey(e.target.value)}
+                        placeholder="sk-ds-..."
+                        className="w-full p-2 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 font-semibold mb-1 text-gray-900 dark:text-zinc-100">
+                        <AIProviderIcon provider="xai" className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
+                        <span>xAI Grok API Key</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={xaiKey}
+                        onChange={(e) => setXaiKey(e.target.value)}
+                        placeholder="xai-..."
+                        className="w-full p-2 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 font-semibold mb-1 text-gray-900 dark:text-zinc-100">
+                        <AIProviderIcon provider="meta" className="w-4 h-4 text-blue-500" />
+                        <span>Ollama Local Instance Host</span>
+                      </label>
                       <input
                         type="text"
                         value={ollamaHost}
@@ -247,6 +380,72 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'search' && (
+              <div className="space-y-4">
+                <div className="p-4 bg-emerald-950/20 border border-emerald-800/30 rounded-xl space-y-1">
+                  <h4 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <Search className="w-4 h-4 text-emerald-500" />
+                    <span>Global Search Bar & Shortcut Settings</span>
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                    Configure search icon visibility, default search filters, and keyboard shortcut settings for instant dePIN telemetry queries.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-xs text-gray-900 dark:text-white">Show Global Search Input in Header</p>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Displays real-time search icon and input bar on top header</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={searchIconVisible}
+                      onChange={(e) => setSearchIconVisible(e.target.checked)}
+                      className="accent-emerald-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-xs text-gray-900 dark:text-white">Enable ⌘K / Ctrl+K Keyboard Shortcut</p>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Focus search bar immediately from anywhere in the OS</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={searchShortcutEnabled}
+                      onChange={(e) => setSearchShortcutEnabled(e.target.checked)}
+                      className="accent-emerald-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl space-y-2">
+                    <p className="font-bold text-xs text-gray-900 dark:text-white">Default Search Query Filter Scope</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {[
+                        { id: 'all', name: 'All Resources (Nodes + Prompts + Models)' },
+                        { id: 'nodes', name: 'DePIN Telemetry Nodes Only' },
+                        { id: 'prompts', name: 'AI Prompts & Workflows Only' },
+                        { id: 'models', name: 'LLM & Provider Models Only' },
+                      ].map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => setSearchDefaultScope(s.id as any)}
+                          className={`p-2 rounded-lg border text-left font-medium text-[11px] transition-all ${
+                            searchDefaultScope === s.id
+                              ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400'
+                          }`}
+                        >
+                          {s.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -321,51 +520,204 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {activeTab === 'integrations' && (
               <div className="space-y-4">
-                <div className="space-y-3">
-                  <p className="font-bold text-gray-900 dark:text-zinc-100">Custom RPCs & APIs</p>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Solana RPC URL</label>
-                    <input type="text" placeholder="https://api.mainnet-beta.solana.com" className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm text-gray-900 dark:text-zinc-100 outline-none focus:border-emerald-500 transition-colors shadow-2xs" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Sui RPC URL</label>
-                    <input type="text" placeholder="https://fullnode.mainnet.sui.io:443" className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm text-gray-900 dark:text-zinc-100 outline-none focus:border-emerald-500 transition-colors shadow-2xs" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Solana Program ID</label>
-                    <input type="text" placeholder="PWRC..." className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm text-gray-900 dark:text-zinc-100 outline-none focus:border-emerald-500 font-mono transition-colors shadow-2xs" />
-                  </div>
-                  <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-colors shadow-sm">Save Endpoints</button>
+                <div className="p-4 bg-emerald-950/20 border border-emerald-800/30 rounded-xl space-y-1">
+                  <h4 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-emerald-500" />
+                    <span>Grid Telemetry & Solana / Sui RPC Clusters</span>
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                    Manage high-speed DAS endpoints, Pyth Hermes price feed oracles, and Sui carbon credit subnets.
+                  </p>
                 </div>
+
+                <div className="space-y-2">
+                  <p className="font-bold text-xs text-gray-900 dark:text-zinc-100">Configured DePIN RPC Endpoints</p>
+                  <div className="space-y-2">
+                    {rpcEndpoints.map((ep) => (
+                      <div
+                        key={ep.id}
+                        className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                          ep.isPrimary
+                            ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/50'
+                            : 'bg-gray-50 dark:bg-zinc-800/80 border-gray-200 dark:border-zinc-700'
+                        }`}
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-gray-900 dark:text-white">{ep.cluster}</span>
+                            <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+                              {ep.network}
+                            </span>
+                            {ep.isPrimary && (
+                              <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                PRIMARY
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10.5px] font-mono text-gray-500 dark:text-zinc-400 truncate max-w-xs">{ep.url}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">
+                            {ep.latencyMs}ms
+                          </span>
+                          <button
+                            onClick={async () => {
+                              const lat = await RpcService.pingEndpoint(ep.id);
+                              setRpcEndpoints([...RpcService.getEndpoints()]);
+                            }}
+                            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 hover:border-emerald-500 text-gray-600 dark:text-zinc-300 transition-colors"
+                            title="Ping RPC"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </button>
+                          {!ep.isPrimary && (
+                            <button
+                              onClick={() => {
+                                RpcService.setPrimaryEndpoint(ep.id);
+                                setRpcEndpoints([...RpcService.getEndpoints()]);
+                              }}
+                              className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition-colors"
+                            >
+                              Set Primary
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="space-y-3 pt-3 border-t border-gray-200 dark:border-zinc-800">
-                  <p className="font-bold text-gray-900 dark:text-zinc-100">Connected Solana & Sui Grid Network RPCs</p>
-                  <div className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-lg flex justify-between items-center shadow-2xs">
-                    <span className="text-sm">Solana High-Speed DAS (Helius RPC)</span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 font-mono text-[10px] font-bold">18ms Latency</span>
+                  <p className="font-bold text-xs text-gray-900 dark:text-zinc-100">Add Custom RPC Endpoint</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <input
+                      type="text"
+                      placeholder="RPC Name / Cluster"
+                      className="p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg text-xs text-gray-900 dark:text-zinc-100 outline-none focus:border-emerald-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="https://rpc.example.com"
+                      className="p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg text-xs text-gray-900 dark:text-zinc-100 outline-none focus:border-emerald-500"
+                    />
                   </div>
-                  <div className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-lg flex justify-between items-center shadow-2xs">
-                    <span className="text-sm">Pyth Energy Price Feed Oracle</span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 font-mono text-[10px] font-bold">Active (KWH/MWH)</span>
-                  </div>
-                  <div className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-lg flex justify-between items-center shadow-2xs">
-                    <span className="text-sm">Sui Network Cetus Carbon Subnet</span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 font-mono text-[10px] font-bold">Connected</span>
-                  </div>
+                  <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-colors shadow-sm">
+                    Add RPC Endpoint
+                  </button>
                 </div>
               </div>
             )}
 
-            {activeTab === 'profile' && (
+            {activeTab === 'gmail' && (
               <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 flex items-center justify-center font-bold">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-gray-900 dark:text-zinc-100">Google Workspace Gmail Integration</h4>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                          Automated settlement receipts, thread summaries, and draft responses.
+                        </p>
+                      </div>
+                    </div>
+                    {gmailConnected ? (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        Connected OAuth2
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        Disconnected
+                      </span>
+                    )}
+                  </div>
+
+                  {!gmailConnected ? (
+                    <button
+                      onClick={handleGmailSignIn}
+                      disabled={gmailLoading}
+                      className="w-full py-2.5 px-4 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-xl font-bold text-xs flex items-center justify-center gap-2 text-gray-800 dark:text-zinc-100 shadow-2xs transition-all cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"/>
+                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                        <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12s.7 2.3 1.9 4.7l3.7-1.9z"/>
+                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
+                      </svg>
+                      <span>{gmailLoading ? 'Connecting OAuth2...' : 'Sign in with Google (Gmail Scopes)'}</span>
+                    </button>
+                  ) : (
+                    <div className="p-3 bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-medium text-gray-500">Connected Account:</span>
+                        <span className="text-xs font-mono font-bold text-gray-900 dark:text-zinc-100">
+                          {gmailUser?.email || 'powerchain.network@gmail.com'}
+                        </span>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-zinc-900">
+                        <button
+                          onClick={handleFetchEnergyEmails}
+                          disabled={gmailLoading}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition-colors"
+                        >
+                          Fetch Energy Emails
+                        </button>
+                        <button
+                          onClick={handleGmailLogout}
+                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-[11px] transition-colors"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {gmailStatusMsg && (
+                    <p className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 p-2 bg-emerald-500/10 rounded-lg">
+                      {gmailStatusMsg}
+                    </p>
+                  )}
+                </div>
+
+                {fetchedEmails.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="font-bold text-gray-900 dark:text-zinc-100 text-xs">Recent Energy Grid Emails</p>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {fetchedEmails.map((email) => (
+                        <div key={email.id} className="p-2.5 bg-gray-50 dark:bg-zinc-800 rounded-lg border border-gray-200 dark:border-zinc-700 space-y-1">
+                          <div className="flex justify-between text-[11px]">
+                            <span className="font-bold text-gray-900 dark:text-zinc-100 truncate">{email.subject}</span>
+                            <span className="text-gray-400 shrink-0 text-[9px]">{email.date}</span>
+                          </div>
+                          <p className="text-[10px] text-gray-500 dark:text-zinc-400 line-clamp-2">{email.snippet}</p>
+                          <p className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 truncate">From: {email.from}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'profile' && (
+              <div className="space-y-5">
                 <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <Avatar name={user.name} imageUrl={localAvatar} size="xl" className="shadow-lg border-2 border-emerald-500/20" />
+                    <Avatar name={activeDemoUser.name || user.name} imageUrl={activeDemoUser.avatarUrl || localAvatar} size="xl" className="shadow-lg border-2 border-emerald-500/20" />
                     <div>
-                      <h4 className="text-lg font-bold text-gray-900 dark:text-zinc-100">{user.name}</h4>
-                      <p className="text-sm text-gray-500 dark:text-zinc-400">{user.email}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wider">
-                        {user.role}
-                      </span>
+                      <h4 className="text-lg font-bold text-gray-900 dark:text-zinc-100">{activeDemoUser.name}</h4>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono">{activeDemoUser.email}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wider">
+                          {activeDemoUser.role}
+                        </span>
+                        <span className="text-[10px] font-mono text-gray-400">
+                          {activeDemoUser.pwrcBalance.toLocaleString()} PWRC
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -385,16 +737,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </button>
                   </div>
                 </div>
+
                 <div className="space-y-3">
-                  <p className="font-bold text-gray-900 dark:text-zinc-100">Account Security</p>
-                  <button className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex justify-between items-center">
-                    <span>Change Password</span>
-                    <span className="text-[10px] text-gray-400">Last changed 3 months ago</span>
-                  </button>
-                  <button className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex justify-between items-center">
-                    <span>Two-Factor Authentication</span>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Enabled</span>
-                  </button>
+                  <p className="font-bold text-xs text-gray-900 dark:text-zinc-100 uppercase tracking-wider text-gray-400">Switch Demo Persona Account</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {DEMO_USERS.map((demo) => (
+                      <button
+                        key={demo.id}
+                        onClick={() => {
+                          const u = UserRolesService.switchUser(demo.id);
+                          setActiveDemoUser({ ...u });
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          activeDemoUser.id === demo.id
+                            ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-gray-50 dark:bg-zinc-800/80 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400'
+                        }`}
+                      >
+                        <p className="font-bold text-xs truncate">{demo.name}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">{demo.role}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="font-bold text-xs text-gray-900 dark:text-zinc-100">Assigned Role Permissions</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {activeDemoUser.permissions.map((p) => (
+                      <span key={p} className="px-2 py-0.5 text-[10px] font-mono bg-zinc-200 dark:bg-zinc-700/80 text-zinc-800 dark:text-zinc-200 rounded border border-zinc-300 dark:border-zinc-600">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -403,38 +778,58 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="space-y-1">
-                    <p className="font-bold text-gray-900 dark:text-zinc-100">System Audit Logs</p>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400">Immutable ledger of sensitive operations and transactions.</p>
+                    <p className="font-bold text-gray-900 dark:text-zinc-100">System & Operational Audit Logs</p>
+                    <p className="text-xs text-gray-500 dark:text-zinc-400">Real-time event stream from RPC gateways, telemetry, and vault operations.</p>
                   </div>
-                  <button onClick={() => { auditLogger.clearLogs(); setLogs([]); }} className="text-xs font-medium text-red-500 hover:text-red-400 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/10 transition-colors">
-                    Clear Logs
+                  <button
+                    onClick={() => {
+                      auditLogger.clearLogs();
+                      logsService.clearLogs();
+                      setLogs([]);
+                      setSystemLogs([]);
+                    }}
+                    className="text-xs font-bold text-red-500 hover:text-red-400 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Clear Logs</span>
                   </button>
                 </div>
-                {logs.length === 0 ? (
+
+                {systemLogs.length === 0 && logs.length === 0 ? (
                   <div className="p-8 text-center text-gray-400 dark:text-zinc-500 border border-dashed border-gray-200 dark:border-zinc-700 rounded-xl">
                     <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm font-semibold">No Audit Logs Found</p>
-                    <p className="text-xs mt-1">Actions and transactions will appear here.</p>
+                    <p className="text-sm font-semibold">No System Logs Found</p>
+                    <p className="text-xs mt-1">Audit events and RPC telemetry activity will appear here.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {systemLogs.map((slog) => (
+                      <div key={slog.id} className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl flex items-start justify-between text-xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                              {slog.level}
+                            </span>
+                            <span className="font-bold text-gray-900 dark:text-white">{slog.source}</span>
+                          </div>
+                          <p className="text-gray-600 dark:text-zinc-300 text-[11px]">{slog.message}</p>
+                        </div>
+                        <span className="text-[9px] font-mono text-gray-400 shrink-0">{new Date(slog.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                    ))}
+
                     {logs.map((log) => (
-                      <div key={log.id} className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-lg flex flex-col gap-2">
+                      <div key={log.id} className="p-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl flex flex-col gap-1 text-xs">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                            <span className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-[9px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
                               {log.category}
                             </span>
-                            <span className="font-bold text-sm text-gray-900 dark:text-zinc-100">{log.action}</span>
+                            <span className="font-bold text-gray-900 dark:text-zinc-100">{log.action}</span>
                           </div>
-                          <span className="text-[10px] text-gray-500 font-mono">{new Date(log.timestamp).toLocaleString()}</span>
+                          <span className="text-[9px] text-gray-400 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-zinc-400">{log.details}</p>
-                        <div className="flex justify-end">
-                          <span className={`text-[10px] font-bold uppercase ${log.status === 'success' ? 'text-emerald-500' : log.status === 'failure' ? 'text-red-500' : 'text-amber-500'}`}>
-                            {log.status}
-                          </span>
-                        </div>
+                        <p className="text-gray-600 dark:text-zinc-400 text-[11px]">{log.details}</p>
                       </div>
                     ))}
                   </div>
